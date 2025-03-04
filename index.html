@@ -58,13 +58,16 @@
       border: none;
       padding: 5px 10px;
       cursor: pointer;
-      font-size: 12px; /* Tamanho da fonte reduzido */
+      font-size: 12px;
       border-radius: 4px;
-      width: auto; /* Largura automática para o conteúdo */
-      min-width: 80px; /* Largura mínima para evitar que fique muito pequeno */
+      width: auto;
+      min-width: 80px;
+    }
+    .items li button.remover {
+      background-color: #dc3545; /* Vermelho para o botão "Remover" */
     }
     .items li button:hover {
-      background-color: #0056b3;
+      opacity: 0.9;
     }
     .shopping-list {
       background-color: #f9f9f9;
@@ -225,7 +228,17 @@
         if (categoriaAberta === categoria) {
           catalogData[categoria].forEach(item => {
             const li = document.createElement('li');
-            li.innerHTML = `${item} <button onclick="adicionarItem('${item}', '${categoria}')">Adicionar</button>`;
+            const itemButton = document.createElement('button');
+            if (listaCompras[categoria] && listaCompras[categoria].includes(item)) {
+              itemButton.textContent = "Remover";
+              itemButton.className = "remover";
+              itemButton.onclick = () => removerItem(item, categoria);
+            } else {
+              itemButton.textContent = "Adicionar";
+              itemButton.onclick = () => adicionarItem(item, categoria);
+            }
+            li.innerHTML = `${item} `;
+            li.appendChild(itemButton);
             itemsList.appendChild(li);
           });
         }
