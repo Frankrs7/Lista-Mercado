@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Catálogo de Produtos</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f9f9f9;
+      margin: 0;
+      padding: 0;
+    }
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 20px;
+      background-color: #fff;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    }
+    h1 {
+      text-align: center;
+      color: #333;
+    }
+    .category {
+      margin-bottom: 20px;
+    }
+    .category button {
+      width: 100%;
+      padding: 10px;
+      background-color: #f1f1f1;
+      border: none;
+      text-align: left;
+      font-size: 16px;
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .category button:hover {
+      background-color: #ddd;
+    }
+    .items {
+      margin-top: 10px;
+      padding-left: 20px;
+    }
+    .items li {
+      list-style: none;
+      padding: 10px;
+      border-bottom: 1px solid #eee;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .items li button {
+      background-color: #007bff;
+      color: #fff;
+      border: none;
+      padding: 5px 10px;
+      cursor: pointer;
+      font-size: 12px; /* Tamanho da fonte reduzido */
+      border-radius: 4px;
+      width: auto; /* Largura automática para o conteúdo */
+      min-width: 80px; /* Largura mínima para evitar que fique muito pequeno */
+    }
+    .items li button:hover {
+      background-color: #0056b3;
+    }
+    .shopping-list {
+      background-color: #f9f9f9;
+      padding: 20px;
+      margin-top: 20px;
+    }
+    .shopping-list h2 {
+      margin-top: 0;
+    }
+    .shopping-list ul {
+      padding-left: 0;
+    }
+    .shopping-list li {
+      list-style: none;
+      padding: 10px;
+      border-bottom: 1px solid #eee;
+      display: flex;
+      align-items: center;
+    }
+    .shopping-list li input {
+      margin-right: 10px;
+    }
+    .shopping-list li .remove {
+      color: red;
+      cursor: pointer;
+      margin-left: auto;
+    }
+    .shopping-list .total {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 20px;
+    }
+    .shopping-list .total button {
+      background-color: #dc3545;
+      color: #fff;
+      border: none;
+      padding: 10px 20px;
+      cursor: pointer;
+    }
+    .shopping-list .total button:hover {
+      background-color: #c82333;
+    }
+    .toast {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      background-color: #333;
+      color: #fff;
+      padding: 10px 20px;
+      border-radius: 5px;
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Catálogo de Produtos</h1>
+    <div id="catalog"></div>
+    <div id="shopping-list" class="shopping-list" style="display: none;">
+      <h2>Minha Lista de Compras</h2>
+      <ul id="shopping-items"></ul>
+      <div class="total">
+        <p>Total de itens: <span id="total-items">0</span></p>
+        <button onclick="limparLista()">Limpar Lista</button>
+      </div>
+      <button onclick="voltarAoCatalogo()" style="margin-top: 10px;">Voltar ao Catálogo</button>
+    </div>
+  </div>
+  <div id="toast" class="toast"></div>
+
+  <script>
+    // Dados do catálogo (ordenados alfabeticamente)
+    const catalogData = {
+      "Hortifruti": [
+        "Abacaxi", "Alface", "Alho", "Banana", "Batata", "Beterraba", "Brócolis", "Cebola", "Cenoura",
+        "Limão", "Maçã", "Manga", "Melancia", "Morango", "Pepino", "Tomate", "Uva"
+      ],
+      "Carnes": [
+        "Bacon", "Carne Bovina", "Carne Suína", "Empanado de Frango", "Frango", "Hambúrguer Bovina",
+        "Linguiça", "Peixe", "Salmão"
+      ],
+      "Laticínios": [
+        "Cream Cheese", "Creme de Leite", "Leite", "Leite Condensado", "Leite em Pó", "Leite Sem Lactose",
+        "Manteiga", "Queijo", "Requeijão", "Sorvete", "Iogurte"
+      ],
+      "Bebidas": [
+        "Água", "Açaí", "Café", "Chá", "Cupuaçu", "Refrigerante", "Suco"
+      ],
+      "Higiene": [
+        "Adesivo Sanitário", "Papel Higiênico", "Pasta de Dente", "Repelente", "Sabonete", "Shampoo"
+      ],
+      "Limpeza": [
+        "Alvejante", "Amaciante", "Cloro", "Desinfetante", "Detergente", "Papel Toalha", "Sabão em Pó"
+      ],
+      "Grãos e Cereais": [
+        "Arroz", "Cereal", "Farinha", "Farinha de Mandioca", "Farofa", "Feijão", "Floco de Milho", "Pipoca"
+      ],
+      "Temperos e Condimentos": [
+        "Azeite de Oliva", "Cacau em Pó", "Canela", "Chocolate", "Ketchup", "Maionese", "Mostarda",
+        "Óleo de Soja", "Shoyo", "Temperos", "Vinagre"
+      ],
+      "Massas e Pães": [
+        "Miojo", "Pão de Alho", "Pão de Cachorro Quente", "Pão de Hambúrguer", "Pão Francês"
+      ],
+      "Enlatados e Conservas": [
+        "Doce de Frutas", "Doce de Leite", "Goiabada", "Milho"
+      ],
+      "Outros": [
+        "Fermento de Bolo", "Fermento de Pão", "Filtro de Café", "Ovo"
+      ]
+    };
+
+    // Estado da aplicação
+    let listaCompras = JSON.parse(localStorage.getItem('listaCompras')) || {};
+    let itensConcluidos = JSON.parse(localStorage.getItem('itensConcluidos')) || {};
+    let categoriaAberta = null;
+    let mostrarLista = false;
+
+    // Função para salvar dados no localStorage
+    function salvarDados() {
+      localStorage.setItem('listaCompras', JSON.stringify(listaCompras));
+      localStorage.setItem('itensConcluidos', JSON.stringify(itensConcluidos));
+    }
+
+    // Função para exibir feedback (toast)
+    function mostrarToast(mensagem) {
+      const toast = document.getElementById('toast');
+      toast.textContent = mensagem;
+      toast.style.display = 'block';
+      setTimeout(() => toast.style.display = 'none', 3000);
+    }
+
+    // Renderiza o catálogo ou a lista de compras
+    function renderizar() {
+      if (!mostrarLista) {
+        renderizarCatalogo();
+      } else {
+        renderizarListaCompras();
+      }
+    }
+
+    // Renderiza o catálogo
+    function renderizarCatalogo() {
+      const catalogDiv = document.getElementById('catalog');
+      catalogDiv.innerHTML = '';
+
+      Object.keys(catalogData).forEach(categoria => {
+        const categoryDiv = document.createElement('div');
+        categoryDiv.className = 'category';
+
+        const button = document.createElement('button');
+        button.innerHTML = `${categoria} <span>${categoriaAberta === categoria ? '▼' : '▶'}</span>`;
+        button.onclick = () => toggleCategoria(categoria);
+
+        const itemsList = document.createElement('ul');
+        itemsList.className = 'items';
+        if (categoriaAberta === categoria) {
+          catalogData[categoria].forEach(item => {
+            const li = document.createElement('li');
+            li.innerHTML = `${item} <button onclick="adicionarItem('${item}', '${categoria}')">Adicionar</button>`;
+            itemsList.appendChild(li);
+          });
+        }
+
+        categoryDiv.appendChild(button);
+        categoryDiv.appendChild(itemsList);
+        catalogDiv.appendChild(categoryDiv);
+      });
+
+      const totalItens = calcularTotalItens();
+      if (totalItens > 0) {
+        const verListaButton = document.createElement('button');
+        verListaButton.innerHTML = `Ver minha lista (${totalItens} itens)`;
+        verListaButton.style = "background-color: #28a745; color: #fff; padding: 10px 20px; border: none; cursor: pointer; margin-top: 20px;";
+        verListaButton.onclick = () => {
+          mostrarLista = true;
+          renderizar();
+        };
+        catalogDiv.appendChild(verListaButton);
+      }
+    }
+
+    // Renderiza a lista de compras
+    function renderizarListaCompras() {
+      const shoppingListDiv = document.getElementById('shopping-list');
+      const shoppingItemsUl = document.getElementById('shopping-items');
+      shoppingItemsUl.innerHTML = '';
+
+      Object.keys(listaCompras).forEach(categoria => {
+        const h3 = document.createElement('h3');
+        h3.textContent = categoria;
+        shoppingItemsUl.appendChild(h3);
+
+        listaCompras[categoria].forEach(item => {
+          const li = document.createElement('li');
+          const checkbox = document.createElement('input');
+          checkbox.type = 'checkbox';
+          checkbox.checked = isItemConcluido(item, categoria);
+          checkbox.onchange = () => toggleItemConcluido(item, categoria);
+
+          const span = document.createElement('span');
+          span.textContent = item;
+          if (checkbox.checked) {
+            span.style.textDecoration = 'line-through';
+            span.style.color = '#888';
+          }
+
+          const removeButton = document.createElement('span');
+          removeButton.className = 'remove';
+          removeButton.textContent = '✕';
+          removeButton.onclick = () => removerItem(item, categoria);
+
+          li.appendChild(checkbox);
+          li.appendChild(span);
+          li.appendChild(removeButton);
+          shoppingItemsUl.appendChild(li);
+        });
+      });
+
+      document.getElementById('total-items').textContent = calcularTotalItens();
+      shoppingListDiv.style.display = 'block';
+      document.getElementById('catalog').style.display = 'none';
+    }
+
+    // Adiciona um item à lista de compras
+    function adicionarItem(item, categoria) {
+      if (!listaCompras[categoria]) {
+        listaCompras[categoria] = [];
+      }
+      if (!listaCompras[categoria].includes(item)) {
+        listaCompras[categoria].push(item);
+        salvarDados();
+        mostrarToast(`${item} adicionado à lista!`);
+        renderizar();
+      }
+    }
+
+    // Remove um item da lista de compras
+    function removerItem(item, categoria) {
+      if (listaCompras[categoria]) {
+        listaCompras[categoria] = listaCompras[categoria].filter(i => i !== item);
+        if (listaCompras[categoria].length === 0) {
+          delete listaCompras[categoria];
+        }
+        salvarDados();
+        mostrarToast(`${item} removido da lista!`);
+        renderizar();
+      }
+    }
+
+    // Alterna a categoria aberta/fechada
+    function toggleCategoria(categoria) {
+      categoriaAberta = categoriaAberta === categoria ? null : categoria;
+      renderizar();
+    }
+
+    // Marca/desmarca um item como concluído
+    function toggleItemConcluido(item, categoria) {
+      if (!itensConcluidos[categoria]) {
+        itensConcluidos[categoria] = {};
+      }
+      itensConcluidos[categoria][item] = !itensConcluidos[categoria][item];
+      salvarDados();
+      renderizarListaCompras();
+    }
+
+    // Verifica se um item está concluído
+    function isItemConcluido(item, categoria) {
+      return itensConcluidos[categoria] && itensConcluidos[categoria][item];
+    }
+
+    // Calcula o total de itens na lista de compras
+    function calcularTotalItens() {
+      return Object.values(listaCompras).reduce((total, itens) => total + itens.length, 0);
+    }
+
+    // Limpa toda a lista de compras
+    function limparLista() {
+      listaCompras = {};
+      itensConcluidos = {};
+      salvarDados();
+      mostrarToast('Lista de compras limpa!');
+      renderizar();
+    }
+
+    // Volta ao catálogo
+    function voltarAoCatalogo() {
+      mostrarLista = false;
+      document.getElementById('shopping-list').style.display = 'none';
+      document.getElementById('catalog').style.display = 'block';
+      renderizar();
+    }
+
+    // Inicializa a aplicação
+    renderizar();
+  </script>
+</body>
+</html>
